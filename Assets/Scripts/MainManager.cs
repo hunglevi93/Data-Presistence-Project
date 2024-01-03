@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
+    public static MainManager Instance;
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
@@ -18,7 +20,12 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
-    
+    public Text nameText;
+    public string namePlayer;
+    public Text highScoreText;
+    public int highScore;
+    public string highScoreName;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -40,6 +47,12 @@ public class MainManager : MonoBehaviour
 
     private void Update()
     {
+        highScoreText.text = "Best Score : " + $"{GameManager.Instance.highScoreName} : {GameManager.Instance.highScore}"; 
+        namePlayer = GameManager.Instance.namePlayer;
+        if (GameManager.Instance != null)
+        {
+            nameText.text = "Name : " + namePlayer;
+        }
         if (!m_Started)
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -58,6 +71,7 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                GameManager.Instance.LoadHighScore();
             }
         }
     }
@@ -70,7 +84,24 @@ public class MainManager : MonoBehaviour
 
     public void GameOver()
     {
+        if(m_Points > GameManager.Instance.highScore)
+        {
+            highScore = m_Points;
+            highScoreName = namePlayer;
+            SaveHighScore();
+        }  
         m_GameOver = true;
         GameOverText.SetActive(true);
     }
+    public void SaveHighScore()
+    {
+        SaveData data = new SaveData();
+        data.highScore = highScore;
+        data.highScoreName = highScoreName;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
+    }
 }
+
